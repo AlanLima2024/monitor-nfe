@@ -243,6 +243,9 @@ app.delete('/emails/:id', auth, async (req, res) => {
     res.status(500).send('Erro ao remover email');
   }
 });
+sequelize.authenticate()
+  .then(() => console.log('🟢 Conectado ao MySQL'))
+  .catch(err => console.error('🔴 Erro no banco:', err));
 
 // =========================
 // 🚀 START
