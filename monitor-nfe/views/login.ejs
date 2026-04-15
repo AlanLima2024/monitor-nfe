@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acesso ao Sistema</title>
+
+  <style>
+    :root {
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --error: #ef4444;
+      --success: #10b981;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.1) 0px, transparent 50%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 40px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    p.subtitle {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+    }
+
+    /* Mensagens de Feedback */
+    .alert {
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .erro { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .sucesso { background: rgba(16, 185, 129, 0.2); color: #a7f3d0; border: 1px solid rgba(16, 185, 129, 0.2); }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Formulários */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .input-group {
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      color: #94a3b8;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid #334155;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    button {
+      padding: 14px;
+      background: var(--primary);
+      color: #0f172a;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    }
+
+    button:active { transform: translateY(0); }
+
+    /* Alternar entre Login/Cadastro */
+    .toggle-box {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .toggle-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .toggle-link:hover { text-decoration: underline; }
+
+    .hidden { display: none; }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  
+  <div id="login-section">
+    <h2>Bem-vindo de volta</h2>
+    <p class="subtitle">Acesse sua conta para monitorar as notas</p>
+
+    <% if (typeof erro !== 'undefined' && erro) { %>
+      <div class="alert erro">⚠️ <%= erro %></div>
+    <% } %>
+
+    <% if (typeof sucesso !== 'undefined' && sucesso) { %>
+      <div class="alert sucesso">✅ <%= sucesso %></div>
+    <% } %>
+
+    <form method="POST" action="/login">
+      <div class="input-group">
+        <label>E-mail</label>
+        <input name="email" type="email" placeholder="seu@email.com" required>
+      </div>
+      <div class="input-group">
+        <label>Senha</label>
+        <input name="senha" type="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit">Entrar no Sistema</button>
+    </form>
+
+    <div class="toggle-box">
+      <p style="font-size: 0.875rem; color: #94a3b8;">Não tem uma conta? 
+        <span class="toggle-link" onclick="toggleForm()">Cadastre-se</span>
+      </p>
+    </div>
+  </div>
+
+  <div id="register-section" class="hidden">
+    <h2>Criar nova conta</h2>
+    <p class="subtitle">Cadastre-se para começar o monitoramento</p>
+
+    <form method="POST" action="/register">
+      <div class="input-group">
+        <label>Melhor E-mail</label>
+        <input name="email" type="email" placeholder="exemplo@email.com" required>
+      </div>
+      <div class="input-group">
+        <label>Escolha uma Senha</label>
+        <input name="senha" type="password" placeholder="Mínimo 6 caracteres" required>
+      </div>
+      <button type="submit" style="background: #94a3b8; color: #0f172a;">Criar minha conta</button>
+    </form>
+
+    <div class="toggle-box">
+      <p style="font-size: 0.875rem; color: #94a3b8;">Já possui acesso? 
+        <span class="toggle-link" onclick="toggleForm()">Fazer Login</span>
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Função para trocar entre Login e Cadastro sem mudar de página
+  function toggleForm() {
+    document.getElementById('login-section').classList.toggle('hidden');
+    document.getElementById('register-section').classList.toggle('hidden');
+  }
+
+  // Se houver mensagem de erro/sucesso, limpa a URL após 1 minuto
+  const alert = document.querySelector('.alert');
+  if (alert) {
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 60000);
+  }
+</script>
+
+</body>
+</html>

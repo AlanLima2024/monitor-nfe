@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor NF-e</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #fff;
+      --primary: #38bdf8;
+      --danger: #ef4444;
+      --border: #334155;
+    }
+
+    body.light {
+      --bg: #f1f5f9;
+      --card: #fff;
+      --text: #0f172a;
+      --border: #cbd5e1;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+      line-height: 1.6;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+    input {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      outline: none;
+    }
+
+    .light input { background: #fff; }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: var(--primary);
+      color: white;
+      font-weight: bold;
+    }
+
+    button:hover { filter: brightness(1.1); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 12px;
+      border-left: 6px solid #ccc;
+      transition: transform 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .card:hover { transform: translateY(-5px); }
+    .liberada { border-left-color: #22c55e; }
+    .bloqueada { border-left-color: #ef4444; }
+    .pendente { border-left-color: #f59e0b; }
+
+    .email-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card);
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .btn-remove { background: var(--danger); }
+
+    canvas { max-width: 100%; margin: 20px 0; }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>📦 Monitor NF-e</h2>
+  <button onclick="toggleTheme()" id="themeBtn">🌙 Tema</button>
+</div>
+
+<div class="container">
+  <h3>📥 Cadastro e Filtros</h3>
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+    <input id="chave" placeholder="Chave (44 dígitos)" maxlength="44">
+    <button onclick="cadastrarNfe()">Cadastrar</button>
+    <input id="busca" placeholder="🔍 Buscar notas..." onkeyup="filtrar()">
+  </div>
+
+  <div style="background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+    <h3>📊 Status Geral</h3>
+    <div style="max-width: 300px; margin: 0 auto;">
+      <canvas id="grafico"></canvas>
+    </div>
+  </div>
+
+  <h3>📋 NF-es Monitoradas</h3>
+  <div class="grid" id="cards">
+    <% nfe.forEach(nota => { %>
+      <div class="card <%= nota.liberada ? 'liberada' : (nota.status === 'PENDENTE' ? 'pendente' : 'bloqueada') %>">
+        <h4 style="margin: 0 0 10px 0;"><%= nota.status %></h4>
+        <p style="font-family: monospace; font-size: 0.85rem; word-break: break-all;"><%= nota.chave %></p>
+        <p style="font-size: 0.9rem; opacity: 0.8;"><%= nota.mensagem || 'Processando...' %></p>
+      </div>
+    <% }) %>
+  </div>
+
+  <h3 style="margin-top: 40px;">📧 Alertas por E-mail</h3>
+  <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+    <input id="emailAlerta" type="email" placeholder="seu@email.com">
+    <button onclick="cadastrarEmail()" style="background: #6366f1;">Ativar Alerta</button>
+  </div>
+
+  <div id="listaEmails">
+    <% if (emails.length === 0) { %>
+      <p style="opacity: 0.5;">Nenhum e-mail cadastrado.</p>
+    <% } %>
+    <% emails.forEach(e => { %>
+      <div class="email-card" id="email-<%= e.id %>">
+        <span><%= e.email %></span>
+        <button class="btn-remove" onclick="removerEmail('<%= e.id %>')">✖</button>
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<script>
+// Evita erros de "Expression expected" no VS Code usando JSON.parse
+const nfeData = JSON.parse('<%- JSON.stringify(nfe) %>');
+
+// CADASTRAR NFE
+async function cadastrarNfe() {
+  const chave = document.getElementById('chave').value.trim();
+  if (!/^\d{44}$/.test(chave)) return alert('A chave deve ter 44 números!');
+
+  const res = await fetch('/nfe', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ chave })
+  });
+  if (res.ok) location.reload();
+}
+
+// CADASTRAR EMAIL
+async function cadastrarEmail() {
+  const email = document.getElementById('emailAlerta').value.trim();
+  if (!email.includes('@')) return alert('Email inválido!');
+
+  await fetch('/emails', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ email })
+  });
+  location.reload();
+}
+
+// REMOVER EMAIL
+async function removerEmail(id) {
+  if (!confirm('Deseja remover este alerta?')) return;
+  const res = await fetch(`/emails/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    const el = document.getElementById(`email-${id}`);
+    el.style.opacity = 0;
+    setTimeout(() => el.remove(), 300);
+  }
+}
+
+// FILTRO
+function filtrar() {
+  const termo = document.getElementById('busca').value.toLowerCase();
+  document.querySelectorAll('.card').forEach(card => {
+    card.style.display = card.innerText.toLowerCase().includes(termo) ? 'block' : 'none';
+  });
+}
+
+// TEMA
+function toggleTheme() {
+  document.body.classList.toggle('light');
+  const isLight = document.body.classList.contains('light');
+  document.getElementById('themeBtn').innerText = isLight ? '☀️ Tema' : '🌙 Tema';
+}
+
+// GRÁFICO (Lógica corrigida)
+const stats = {
+  liberadas: nfeData.filter(n => n.liberada).length,
+  bloqueadas: nfeData.filter(n => !n.liberada && n.status !== 'PENDENTE').length,
+  pendentes: nfeData.filter(n => n.status === 'PENDENTE').length
+};
+
+new Chart(document.getElementById('grafico'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Liberadas', 'Bloqueadas', 'Pendentes'],
+    datasets: [{
+      data: [stats.liberadas, stats.bloqueadas, stats.pendentes],
+      backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    plugins: { legend: { position: 'bottom', labels: { color: '#888' } } }
+  }
+});
+
+// Auto-refresh conforme solicitado
+setTimeout(() => location.reload(), 45000); 
+</script>
+
+</body>
+</html>
